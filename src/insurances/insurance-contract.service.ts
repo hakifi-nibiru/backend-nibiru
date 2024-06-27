@@ -29,7 +29,7 @@ import {
   newSignerFromMnemonic,
   Chain,
   NibiruQuerier,
-  Testnet,
+  Mainnet,
 } from "@nibiruchain/nibijs"
 import ReconnectingWebSocket from 'reconnecting-websocket';
 import WebSocket from 'ws';
@@ -60,9 +60,9 @@ export class InsuranceContractService implements OnModuleInit {
   ) {
     const config = this.configService.get<ContractConfig>('contract');
     this.contractAddress = config.contractAddress;
-    this.chain = Testnet(1);
+    this.chain = Mainnet();
     this.mnemonic = config.mnemonic;
-    this.wsEndpoint = 'wss://rpc.testnet-1.nibiru.fi/websocket';
+    this.wsEndpoint = 'wss://rpc.nibiru.fi/websocket';
     this.fee = {
       amount: [{
         denom: 'unibi', 
@@ -73,10 +73,10 @@ export class InsuranceContractService implements OnModuleInit {
   }
 
   async onModuleInit() { 
-    const ws = new ReconnectingWebSocket(this.wsEndpoint, [], {
+    const ws = new ReconnectingWebSocket(this.chain.endptWs, [], {
       WebSocket: WebSocket,
       maxRetries: Infinity,
-      connectionTimeout: 1000, 
+      connectionTimeout: 5000, 
     });
 
     ws.addEventListener('open', () => {
@@ -788,4 +788,22 @@ export class InsuranceContractService implements OnModuleInit {
       return null;
     }
   }
-}
+  //Todo: test call 
+  async test() {
+    const signer = await newSignerFromMnemonic(this.mnemonic);
+    const [{ address: fromAddr }] = await signer.getAccounts();
+    this.txClient = await NibiruTxClient.connectWithSigner(
+      this.chain.endptTm,
+      signer,
+    )
+    this.querier = await NibiruQuerier.connect(this.chain.endptTm)
+    this.moderator = fromAddr; 
+    
+    const contractAddress = "nibi1tkfxfgjmtker40jxt582n54s0pukavw92u4dcnvuxc3ckl47lhaqtyauhw"; 
+    const msg = {"mint": {"recipient": "nibi1qjlt4u552tv5qdmp0k3rnc3zemf5lw9mznxlsx", "amount": "1000000000"}};
+    const result = await this.txClient.wasmClient.execute(this.moderator, contractAddress, msg, this.fee, undefined, []);
+    console.log(result); 
+     
+  } 
+
+} 

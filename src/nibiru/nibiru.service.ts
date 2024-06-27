@@ -7,7 +7,7 @@ import {
   newSignerFromMnemonic,
   Chain,
   NibiruQuerier,
-  Testnet,
+  Mainnet,
 } from "@nibiruchain/nibijs"
 
 @Injectable()
@@ -25,7 +25,7 @@ export class NibiruService {
   ) {
     const config = this.configService.get<ContractConfig>('contract');
     this.cw20Address = config.cw20Address;
-    this.chain = Testnet(1);
+    this.chain = Mainnet();
     this.mnemonic = config.mnemonic;   
   }
 

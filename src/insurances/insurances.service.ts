@@ -350,12 +350,6 @@ export class InsurancesService {
   }
 
   async updateTxHash(userId: string, id: string, txhash: string) {
-    const insurance = await this.prismaService.insurance.findUnique({
-      where: { id, userId },
-    });    
-    if (insurance.state !== "PENDING") {
-      throw new BadRequestException('Insurance state not pending');
-    }
     return this.prismaService.insurance.update({
       where: { id, userId },
       data: { txhash },
